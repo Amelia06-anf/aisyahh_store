@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 class AccountScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  AccountScreen({super.key});
+
   void _logout(BuildContext context) async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
 

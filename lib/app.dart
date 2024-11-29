@@ -1,3 +1,4 @@
+import 'package:aisyahh_store/admin/dashboardAdmin.dart';
 import 'package:aisyahh_store/cardProvider.dart';
 import 'package:aisyahh_store/screen/accountScreen.dart';
 import 'package:aisyahh_store/screen/completeAccountScreen.dart';
@@ -11,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -23,11 +26,12 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.brown),
 
         // Gunakan initialRoute untuk menentukan halaman awal
-        // initialRoute: '/complete_profile',
+        // initialRoute: '/admin',
 
         // Rute untuk aplikasi
         routes: {
           '/': (context) => const SplashScreen(),
+          '/admin': (context) => const AdminDashboard(),
           '/home': (context) => HomeScreen(),
           '/sign_in': (context) => const LoginScreen(),
           '/sign_up': (context) => const CreateAccountScreen(),

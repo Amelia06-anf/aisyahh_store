@@ -202,11 +202,12 @@ class CartScreen extends StatelessWidget {
                           if (cartProvider.cartItems.isNotEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
+                                // here is popup using midtrans, like chosen payment method, the midtrans is using sandbox
                                 content: Text('Checkout berhasil!'),
                                 duration: Duration(seconds: 2),
                               ),
                             );
-                            cartProvider.clearCart(userId!);
+                            // cartProvider.clearCart(userId!);
                           }
                         },
                         style: ElevatedButton.styleFrom(
