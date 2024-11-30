@@ -328,58 +328,64 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
 // Fungsi untuk mencetak data produk dalam bentuk PDF
+
   void _printProducts(List<QueryDocumentSnapshot> products) async {
     final pdf = pw.Document();
 
-    // Menambahkan halaman PDF
+    // Header tabel
+    final tableHeaders = [
+      "ID Produk",
+      "Nama Barang",
+      "Merk",
+      "Harga Awal",
+      "Harga Diskon",
+    ];
+
+    // Data tabel
+    final tableData = products.map((product) {
+      return [
+        product.id,
+        product['nama'] ?? 'N/A',
+        product['merk'] ?? 'N/A',
+        product['hargaAwal'].toString(),
+        product['hargaDiskon'].toString(),
+      ];
+    }).toList();
+
+    // Tambahkan halaman PDF dengan tabel
     pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text("Daftar Stok Produk",
-                  style: pw.TextStyle(
-                      fontSize: 24, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 20),
-              // Header untuk tabel
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text("ID Produk",
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Nama Barang",
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Merk",
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Harga Awal",
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Harga Diskon",
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                ],
-              ),
-              pw.Divider(),
-              // Data produk dari Firestore
-              for (var product in products)
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(product.id), // Menampilkan ID produk
-                    pw.Text(
-                        product['nama'] ?? 'N/A'), // Menampilkan Nama Produk
-                    pw.Text(product['merk'] ?? 'N/A'), // Menampilkan Merk
-                    pw.Text(product['hargaAwal']
-                        .toString()), // Menampilkan Harga Awal
-                    pw.Text(product['hargaDiskon']
-                        .toString()), // Menampilkan Harga Diskon
-                  ],
-                ),
-              pw.SizedBox(height: 20),
-              pw.Text("Total Produk: ${products.length}",
-                  style: pw.TextStyle(fontSize: 16)),
-            ],
-          );
-        },
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Text("Daftar Stok Produk",
+              style:
+                  pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 20),
+          pw.Table.fromTextArray(
+            headers: tableHeaders,
+            data: tableData,
+            border: pw.TableBorder.all(),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 12,
+            ),
+            cellStyle: pw.TextStyle(fontSize: 10),
+            headerDecoration: pw.BoxDecoration(
+              color: PdfColor.fromHex("#eeeeee"),
+            ),
+            cellAlignment: pw.Alignment.centerLeft,
+            columnWidths: {
+              0: pw.FixedColumnWidth(50), // ID Produk
+              1: pw.FlexColumnWidth(), // Nama Barang
+              2: pw.FlexColumnWidth(), // Merk
+              3: pw.FixedColumnWidth(70), // Harga Awal
+              4: pw.FixedColumnWidth(70), // Harga Diskon
+            },
+          ),
+          pw.SizedBox(height: 20),
+          pw.Text("Total Produk: ${products.length}",
+              style: pw.TextStyle(fontSize: 16)),
+        ],
       ),
     );
 

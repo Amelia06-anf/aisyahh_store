@@ -396,30 +396,13 @@ class HomeScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.notifications, color: Colors.grey),
-          title: const Text('Notification'),
-          onTap: () {
-            // Tutup drawer dan arahkan ke halaman Notification
-            Navigator.pop(context);
-            // Arahkan ke halaman baru jika tersedia
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.local_offer, color: Colors.grey),
-          title: const Text('Offer'),
-          onTap: () {
-            // Tutup drawer dan arahkan ke halaman Offer
-            Navigator.pop(context);
-          },
-        ),
       ])),
     );
   }
 
   Widget _buildBanner() {
     return Container(
-      height: 200,
+      height: 500,
       margin: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),

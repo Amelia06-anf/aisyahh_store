@@ -59,8 +59,8 @@ class ProdukDetailScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     child: Image.network(
                       product['imageUrl'] ?? 'https://via.placeholder.com/200',
-                      height: 200,
-                      width: double.infinity,
+                      height: 700,
+                      width: 300,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => const Icon(
                         Icons.broken_image,
