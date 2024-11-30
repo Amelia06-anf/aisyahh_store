@@ -2,6 +2,7 @@ import 'package:aisyahh_store/cardProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:aisyahh_store/checkout/stripHandel.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -198,19 +199,8 @@ class CartScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () {
-                          if (cartProvider.cartItems.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                // here is popup using midtrans, like chosen payment method, the midtrans is using sandbox
-                                content: Text('Checkout berhasil!'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            // cartProvider.clearCart(userId!);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
+                        onPressed: () => redirectToCheckout(context)
+                          ,style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.brown,
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           shape: RoundedRectangleBorder(
