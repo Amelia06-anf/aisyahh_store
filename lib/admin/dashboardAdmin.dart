@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:html' as html;
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
+  @override
+  _AdminDashboardState createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  int _currentPage = 1; // Halaman saat ini
+  final int _itemsPerPage = 10; // Jumlah data per halaman
+  late List<DocumentSnapshot> _products; // Data produk yang akan dipaginasi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +32,7 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  // Membuat AppBar
+  // AppBar
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.brown,
@@ -34,7 +47,6 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  // Membuat dropdown dan tanggal di AppBar
   Row _buildAppBarActions() {
     return Row(
       children: [
@@ -55,9 +67,7 @@ class AdminDashboard extends StatelessWidget {
               child: Text("Admin", style: TextStyle(color: Colors.white)),
             ),
           ],
-          onChanged: (value) {
-            // Logika jika diperlukan
-          },
+          onChanged: (value) {},
         ),
       ],
     );
@@ -68,9 +78,9 @@ class AdminDashboard extends StatelessWidget {
     return Container(
       width: 250,
       color: Colors.brown,
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
@@ -92,7 +102,7 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  // Menampilkan konten utama
+  // Main Content
   Widget _buildMainContent() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -108,177 +118,305 @@ class AdminDashboard extends StatelessWidget {
             _buildDashboardCards(),
             const SizedBox(height: 32),
             _buildTableCard(
-              title: "Tabel Data Pesanan",
+              title: "Tabel Pesanan",
               dataTable: _buildPesananDataTable(),
-              onPrint: () {},
             ),
-            const SizedBox(height: 16),
-            _buildDataRows(),
+            const SizedBox(height: 32),
+            // Replace Row with Column to stack the tables vertically
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTableCard(
+                  title: "Tabel Stok Produk",
+                  dataTable: _buildStokProdukDataTable(),
+                ),
+                const SizedBox(height: 32),
+                _buildTableCard(
+                  title: "Tabel Produk Keluar",
+                  dataTable: _buildProdukKeluarDataTable(),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  // Menampilkan kartu dashboard
   Widget _buildDashboardCards() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        DashboardCard(
-          title: "Data Pesanan",
-          subtitle: "Total Pesanan",
-          details: "↑ 80 Pesanan Baru",
-          width: 400,
-        ),
-        DashboardCard(
-          title: "Data Produk Keluar",
-          subtitle: "Produk Terjual",
-          details: "↑ 200 Produk Terjual",
-          width: 400,
-        ),
-        DashboardCard(
-          title: "Stok Produk",
-          subtitle: "Jumlah Stok",
-          details: "↑ 100 Produk Tersedia",
-          width: 400,
-        ),
-      ],
-    );
-  }
-
-  // Menampilkan tabel Data Pesanan
-  DataTable _buildPesananDataTable() {
-    return DataTable(
-      columns: const [
-        DataColumn(label: Text('ID Pesanan')),
-        DataColumn(label: Text('UID')),
-        DataColumn(label: Text('Nama Pelanggan')),
-        DataColumn(label: Text('Tanggal Pesanan')),
-        DataColumn(label: Text('Status Pengiriman')),
-        DataColumn(label: Text('Total Harga')),
-      ],
-      rows: const [
-        DataRow(cells: [
-          DataCell(Text('12345')),
-          DataCell(Text('uid123')),
-          DataCell(Text('John Doe')),
-          DataCell(Text('2024-11-25')),
-          DataCell(Text('Delivered')),
-          DataCell(Text('Rp 250,000')),
-        ]),
-        DataRow(cells: [
-          DataCell(Text('12346')),
-          DataCell(Text('uid124')),
-          DataCell(Text('Jane Doe')),
-          DataCell(Text('2024-11-26')),
-          DataCell(Text('In Process')),
-          DataCell(Text('Rp 150,000')),
-        ]),
-      ],
-    );
-  }
-
-  // Menampilkan tabel data produk keluar dan stok produk
-  Widget _buildDataRows() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
+        // First Card - Data Pesanan
         Expanded(
-          child: _buildTableCard(
-            title: "Tabel Data Produk Keluar",
-            onPrint: () {},
-            dataTable: _buildProdukKeluarDataTable(),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SizedBox(
+              width: 400,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Data Pesanan",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Total Pesanan",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "↑ 80 Pesanan Baru",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Print Button
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        html.window.print(); // Open the print dialog
+                      },
+                      child: const Text("Print Data"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(width: 16),
+
+        // Second Card - Data Produk Keluar
         Expanded(
-          child: _buildTableCard(
-            title: "Tabel Stok Produk",
-            onPrint: () {},
-            dataTable: _buildStokProdukDataTable(),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SizedBox(
+              width: 400,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Data Produk Keluar",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Produk Terjual",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "↑ 200 Produk Terjual",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Print Button
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        html.window.print(); // Open the print dialog
+                      },
+                      child: const Text("Print Data"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Third Card - Stok Produk from Firebase
+        Expanded(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SizedBox(
+              width: 400,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('produk')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Text("Stok Produk: 0");
+                    }
+
+                    final products = snapshot.data!.docs;
+                    final totalStok = products.length;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Stok Produk",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Jumlah Stok",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "↑ $totalStok Produk Tersedia",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            _printProducts(
+                                products); // Panggil fungsi untuk mencetak data produk
+                          },
+                          child: const Text("Print Data"),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
         ),
       ],
     );
   }
 
-  // Tabel Data Produk Keluar
-  DataTable _buildProdukKeluarDataTable() {
-    return DataTable(
-      columns: const [
-        DataColumn(label: Text('ID Produk')),
-        DataColumn(label: Text('Nama Produk')),
-        DataColumn(label: Text('Tanggal Pesanan')),
-        DataColumn(label: Text('Aksi')),
-      ],
-      rows: const [
-        DataRow(cells: [
-          DataCell(Text('p001')),
-          DataCell(Text('Produk A')),
-          DataCell(Text('2024-11-25')),
-          DataCell(IconButton(
-            icon: Icon(Icons.delivery_dining, color: Colors.blue),
-            onPressed: null,
-          )),
-        ]),
-        DataRow(cells: [
-          DataCell(Text('p002')),
-          DataCell(Text('Produk B')),
-          DataCell(Text('2024-11-26')),
-          DataCell(IconButton(
-            icon: Icon(Icons.refresh, color: Colors.green),
-            onPressed: null,
-          )),
-        ]),
-      ],
+// Fungsi untuk mencetak data produk dalam bentuk PDF
+  void _printProducts(List<QueryDocumentSnapshot> products) async {
+    final pdf = pw.Document();
+
+    // Menambahkan halaman PDF
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("Daftar Stok Produk",
+                  style: pw.TextStyle(
+                      fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 20),
+              // Header untuk tabel
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text("ID Produk",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Nama Barang",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Merk",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Harga Awal",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Harga Diskon",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+              pw.Divider(),
+              // Data produk dari Firestore
+              for (var product in products)
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(product.id), // Menampilkan ID produk
+                    pw.Text(
+                        product['nama'] ?? 'N/A'), // Menampilkan Nama Produk
+                    pw.Text(product['merk'] ?? 'N/A'), // Menampilkan Merk
+                    pw.Text(product['hargaAwal']
+                        .toString()), // Menampilkan Harga Awal
+                    pw.Text(product['hargaDiskon']
+                        .toString()), // Menampilkan Harga Diskon
+                  ],
+                ),
+              pw.SizedBox(height: 20),
+              pw.Text("Total Produk: ${products.length}",
+                  style: pw.TextStyle(fontSize: 16)),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Cetak PDF atau simpan ke file
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
     );
   }
 
-  // Tabel Stok Produk
-  DataTable _buildStokProdukDataTable() {
-    return DataTable(
-      columns: const [
-        DataColumn(label: Text('ID Produk')),
-        DataColumn(label: Text('Nama Barang')),
-        DataColumn(label: Text('Merk')),
-        DataColumn(label: Text('Stok')),
-      ],
-      rows: const [
-        DataRow(cells: [
-          DataCell(Text('p001')),
-          DataCell(Text('Produk A')),
-          DataCell(Text('Merk A')),
-          DataCell(Text('50')),
-        ]),
-        DataRow(cells: [
-          DataCell(Text('p002')),
-          DataCell(Text('Produk B')),
-          DataCell(Text('Merk B')),
-          DataCell(Text('100')),
-        ]),
-      ],
-    );
-  }
-
-  // Membuat Card untuk tabel
+  // Table Card
   Widget _buildTableCard({
     required String title,
-    required VoidCallback onPrint,
-    required DataTable dataTable,
+    required Widget dataTable,
   }) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTableCardHeader(title, onPrint),
-            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             dataTable,
           ],
         ),
@@ -286,94 +424,188 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  // Header Card untuk tabel
-  Row _buildTableCardHeader(String title, VoidCallback onPrint) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.print, color: Colors.brown),
-          onPressed: onPrint,
-        ),
+  // Pesanan Data Table
+  Widget _buildPesananDataTable() {
+    return DataTable(
+      columns: const [
+        DataColumn(label: Text("ID Pesanan")),
+        DataColumn(label: Text("Nama Pelanggan")),
+        DataColumn(label: Text("Tanggal Pesanan")),
+        DataColumn(label: Text("Status Pengiriman")),
+        DataColumn(label: Text("Total Harga")),
+      ],
+      rows: const [
+        DataRow(cells: [
+          DataCell(Text("12345")),
+          DataCell(Text("John Doe")),
+          DataCell(Text("2024-11-25")),
+          DataCell(Text("Delivered")),
+          DataCell(Text("Rp 250,000")),
+        ]),
+        DataRow(cells: [
+          DataCell(Text("12346")),
+          DataCell(Text("Jane Doe")),
+          DataCell(Text("2024-11-26")),
+          DataCell(Text("In Process")),
+          DataCell(Text("Rp 150,000")),
+        ]),
+      ],
+    );
+  }
+
+  // Fungsi untuk mengambil data produk yang relevan berdasarkan halaman aktif
+  List<DocumentSnapshot> _paginateData(List<DocumentSnapshot> data) {
+    int startIndex = (_currentPage - 1) * _itemsPerPage;
+    int endIndex = startIndex + _itemsPerPage;
+    return data.sublist(
+        startIndex, endIndex < data.length ? endIndex : data.length);
+  }
+
+// Fungsi untuk berpindah ke halaman berikutnya
+  void _nextPage() {
+    setState(() {
+      if (_currentPage < (_products.length / _itemsPerPage).ceil()) {
+        _currentPage++;
+      }
+    });
+  }
+
+// Fungsi untuk kembali ke halaman sebelumnya
+  void _previousPage() {
+    setState(() {
+      if (_currentPage > 1) {
+        _currentPage--;
+      }
+    });
+  }
+
+// Fungsi untuk menampilkan tabel produk dengan pagination
+  Widget _buildStokProdukDataTable() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('produk')
+          .orderBy('nama') // Mengurutkan produk berdasarkan nama
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('No data available'));
+        }
+
+        var data = snapshot.data!.docs;
+
+        // Memanggil fungsi pagination untuk mendapatkan data yang relevan
+        var paginatedData = _paginateData(data);
+
+        // Inisialisasi _products di sini jika diperlukan (misalnya untuk jumlah halaman)
+        _products = data; // Menyimpan data ke _products
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DataTable(
+              columns: const [
+                DataColumn(label: Text('ID Produk')),
+                DataColumn(label: Text('Nama Barang')),
+                DataColumn(label: Text('Merk')),
+                DataColumn(label: Text('Harga Awal')),
+                DataColumn(label: Text('Harga Diskon')),
+                DataColumn(label: Text('Gambar Produk')),
+              ],
+              rows: paginatedData.map<DataRow>((doc) {
+                var produk = doc.data() as Map<String, dynamic>;
+                var imageUrl = produk['imageUrl'] ?? '';
+                return DataRow(cells: [
+                  DataCell(Text(doc.id ?? 'N/A')),
+                  DataCell(Text(produk['nama'] ?? 'N/A')),
+                  DataCell(Text(produk['merk'] ?? 'N/A')),
+                  DataCell(Text(produk['hargaAwal'].toString() ?? 'N/A')),
+                  DataCell(Text(produk['hargaDiskon'].toString() ?? 'N/A')),
+                  DataCell(
+                    imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            width: 50, // lebar kotak gambar
+                            height: 50, // tinggi kotak gambar
+                            fit: BoxFit
+                                .cover, // agar gambar tetap terpotong dengan proporsional
+                          )
+                        : const Text('No image'),
+                  )
+                ]);
+              }).toList(),
+            ),
+            // Pagination Controls
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed:
+                      _currentPage > 1 ? _previousPage : null, // Previous page
+                ),
+                Text('Page $_currentPage'),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward),
+                  onPressed:
+                      _currentPage < (_products.length / _itemsPerPage).ceil()
+                          ? _nextPage
+                          : null, // Next page
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Produk Keluar Data Table
+  Widget _buildProdukKeluarDataTable() {
+    return DataTable(
+      columns: const [
+        DataColumn(label: Text("ID Produk")),
+        DataColumn(label: Text("Nama Produk")),
+        DataColumn(label: Text("Jumlah Terjual")),
+        DataColumn(label: Text("Tanggal Terjual")),
+      ],
+      rows: const [
+        DataRow(cells: [
+          DataCell(Text("12345")),
+          DataCell(Text("Produk A")),
+          DataCell(Text("50")),
+          DataCell(Text("2024-11-25")),
+        ]),
+        DataRow(cells: [
+          DataCell(Text("12346")),
+          DataCell(Text("Produk B")),
+          DataCell(Text("30")),
+          DataCell(Text("2024-11-26")),
+        ]),
       ],
     );
   }
 }
 
-// Sidebar Item widget
 class _SidebarItem extends StatelessWidget {
+  const _SidebarItem({
+    super.key,
+    required this.title,
+    required this.icon,
+  });
+
   final String title;
   final IconData icon;
-
-  const _SidebarItem({required this.title, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       leading: Icon(icon, color: Colors.white),
       title: Text(title, style: const TextStyle(color: Colors.white)),
       onTap: () {},
-    );
-  }
-}
-
-// Dashboard Card untuk menampilkan data statistik
-class DashboardCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String details;
-  final double width;
-
-  const DashboardCard({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.details,
-    required this.width,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: SizedBox(
-        width: width,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  )),
-              const SizedBox(height: 8),
-              Text(subtitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  )),
-              const SizedBox(height: 8),
-              Text(details,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  )),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:aisyahh_store/admin/adminlogin.dart';
 import 'package:aisyahh_store/admin/dashboardAdmin.dart';
 import 'package:aisyahh_store/cardProvider.dart';
 import 'package:aisyahh_store/screen/accountScreen.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         // Rute untuk aplikasi
         routes: {
           '/': (context) => const SplashScreen(),
+          '/adminlog': (context) => const AdminLoginScreen(),
           '/admin': (context) => const AdminDashboard(),
           '/home': (context) => HomeScreen(),
           '/sign_in': (context) => const LoginScreen(),
