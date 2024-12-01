@@ -9,6 +9,7 @@ import 'package:aisyahh_store/screen/loginScreen.dart';
 import 'package:aisyahh_store/screen/profileScreen.dart';
 import 'package:aisyahh_store/screen/shiptoScreen.dart';
 import 'package:aisyahh_store/screen/splashScreen.dart';
+import 'package:aisyahh_store/screen/sucsesScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.brown),
 
         // Gunakan initialRoute untuk menentukan halaman awal
-        // initialRoute: '/admin',
+        // initialRoute: '/kerjabagus'  
 
         // Rute untuk aplikasi
         routes: {
@@ -41,6 +42,8 @@ class MyApp extends StatelessWidget {
           '/account': (context) => AccountScreen(),
           '/profile': (context) => ProfileScreen(),
           '/address': (context) => AddressScreen(),
+          '/kerjabagus': (context) => SuccessScreen(),
+          
         },
 
         // Tampilkan halaman error jika rute tidak ditemukan

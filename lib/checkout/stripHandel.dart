@@ -1,6 +1,5 @@
 @JS()
 library stripe;
-
 import 'package:aisyahh_store/checkout/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:aisyahh_store/checkout/stripHandel.dart';
@@ -14,8 +13,11 @@ void redirectToCheckout(BuildContext _) async {
     lineItems: [
       LineItem(price: nikesPriceId, quantity: 1),
     ],
-    mode: 'subscription',
-    successUrl: 'http://localhost:8080/#/success',
+    mode: 'payment',
+    successUrl: 'http://localhost:54703/#/kerjabagus',
+
+    // Halaman terimakasih 
+
     cancelUrl: 'http://localhost:8080/#/cancel',
   ));
 }
